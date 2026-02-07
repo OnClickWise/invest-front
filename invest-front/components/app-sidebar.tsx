@@ -2,20 +2,15 @@
 
 import * as React from "react"
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
   Settings2,
-  SquareTerminal,
+  Users,
+  Wallet,
+  Building2,
+  ShieldCheck,
+  TrendingUp,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import {
@@ -25,149 +20,88 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/contexts/auth-context"
 
-// This is sample data.
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "Dr. Roberto",
+    email: "roberto@invest.com",
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
+    { name: "Alpha Capital", logo: Building2, plan: "Enterprise" },
+    { name: "BlueStone Invest", logo: Wallet, plan: "Pro" },
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "Governança",
       url: "#",
-      icon: SquareTerminal,
+      icon: ShieldCheck,
       isActive: true,
+      visibleTo: ['SUPER_ADMIN'], 
       items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
+        { title: "Dashboard Global", url: "/dashboard/global" },
+        { title: "Tenants & Gestoras", url: "/dashboard/tenants" },
       ],
     },
     {
-      title: "Models",
+      title: "Gestão",
       url: "#",
-      icon: Bot,
+      icon: Users,
+      isActive: true,
+      visibleTo: ['SUPER_ADMIN', 'ADMIN'],
       items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
+        { title: "Visão Geral", url: "/dashboard/overview" },
+        { title: "Carteira de Clientes", url: "/dashboard/clients" },
       ],
     },
     {
-      title: "Documentation",
+      title: "Investidor",
       url: "#",
-      icon: BookOpen,
+      icon: TrendingUp,
+      visibleTo: ['SUPER_ADMIN', 'ADMIN', 'INVESTOR'],
       items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
+        { title: "Meu Patrimônio", url: "/dashboard/my-wealth" },
+        { title: "Simulação", url: "/dashboard/simulation" },
       ],
     },
     {
-      title: "Settings",
+      title: "Configurações",
       url: "#",
       icon: Settings2,
+      visibleTo: ['SUPER_ADMIN', 'ADMIN', 'INVESTOR'],
       items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
+        { title: "Perfil", url: "/settings/profile" },
       ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
     },
   ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // Conectando ao mesmo cérebro da Página
+  const { role } = useAuth(); 
+
+  // Filtra o menu em tempo real
+  const filteredNavMain = data.navMain.filter(item => 
+    !item.visibleTo || item.visibleTo.includes(role)
+  );
+
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+    <Sidebar collapsible="icon" className="border-r border-slate-800 bg-slate-950" {...props}>
+      <SidebarHeader className="bg-slate-950 border-b border-slate-800">
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+      
+      <SidebarContent className="bg-slate-950">
+        <NavMain items={filteredNavMain} />
       </SidebarContent>
-      <SidebarFooter>
+
+      <SidebarFooter className="bg-slate-950 border-t border-slate-800">
         <NavUser user={data.user} />
+        {/* Indicador visual de qual perfil está ativo na sidebar */}
+        <div className="px-4 py-2 text-[10px] text-slate-600 font-mono text-center group-data-[collapsible=icon]:hidden">
+          Perfil: {role}
+        </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

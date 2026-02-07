@@ -1,4 +1,11 @@
-import { AppSidebar } from "@/components/app-sidebar"
+"use client"
+
+// Importamos o hook para acessar o contexto global
+import { useAuth } from "@/contexts/auth-context"
+import { ProjectionTool } from "@/components/invest/projection-tool"
+import { AllocationChart } from "@/components/invest/allocation-chart"
+import { RecentTransactions } from "@/components/invest/recent-transactions"
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,48 +15,105 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
+import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Building2, Wallet, Users, TrendingUp, ShieldCheck, Target } from "lucide-react"
 
-export default function Page() {
+function MetricCard({ title, value, icon: Icon, change }: any) {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
+    <Card className="bg-slate-950 border-slate-800 text-slate-200 hover:border-slate-700 transition-colors">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-slate-400">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-emerald-500" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-white">{value}</div>
+        <p className="text-xs text-emerald-500 flex items-center mt-1">
+          {change} <span className="text-slate-500 ml-1">vs. mês anterior</span>
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function DashboardPage() {
+  // O SEGREDO: Usamos o contexto global, não mais um estado local isolado
+  const { role, setRole } = useAuth();
+
+  return (
+    <div className="flex flex-col h-full">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-slate-800 px-4 bg-slate-950/80 backdrop-blur sticky top-0 z-10">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="text-slate-400 hover:text-white hover:bg-slate-800" />
+            <Separator orientation="vertical" className="mr-2 h-4 bg-slate-800" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Build Your Application
-                  </BreadcrumbLink>
+                  <BreadcrumbLink href="#" className="text-slate-400 hover:text-white">InvestPro</BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbSeparator className="hidden md:block text-slate-600" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                  <BreadcrumbPage className="text-white">Dashboard</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
+          
+          <div className="ml-auto flex items-center gap-3">
+             <div className="flex items-center gap-2">
+               <span className="text-xs text-slate-500 hidden md:inline">Perfil (Simulação):</span>
+               <select 
+                 className="bg-slate-900 border border-slate-800 text-xs text-white rounded p-1.5 focus:border-blue-500 outline-none cursor-pointer"
+                 value={role}
+                 onChange={(e: any) => setRole(e.target.value)}
+               >
+                  <option value="SUPER_ADMIN">Super Admin</option>
+                  <option value="ADMIN">Gestor</option>
+                  <option value="INVESTOR">Investidor</option>
+               </select>
+             </div>
           </div>
-          <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          
+          {/* Métricas Dinâmicas baseadas no Role Global */}
+          <div className="grid gap-4 md:grid-cols-3">
+             {role === 'SUPER_ADMIN' && (
+                <>
+                  <MetricCard title="Tenants Ativos" value="124" change="+12%" icon={Building2} />
+                  <MetricCard title="AUM Global" value="R$ 4.2B" change="+8.4%" icon={Wallet} />
+                  <MetricCard title="Receita SaaS (MRR)" value="R$ 840k" change="+15%" icon={TrendingUp} />
+                </>
+             )}
+             {role === 'ADMIN' && (
+                <>
+                  <MetricCard title="Carteiras" value="84" change="+4" icon={Users} />
+                  <MetricCard title="Patrimônio" value="R$ 145M" change="+1.2%" icon={Wallet} />
+                  <MetricCard title="Rentabilidade" value="1.45%" change="+0.2%" icon={TrendingUp} />
+                </>
+             )}
+             {role === 'INVESTOR' && (
+                <>
+                  <MetricCard title="Meu Saldo" value="R$ 152.400" change="+2.5%" icon={Wallet} />
+                  <MetricCard title="Rentabilidade" value="18.4%" change="+1.2%" icon={TrendingUp} />
+                  <MetricCard title="Projeção 2028" value="R$ 480k" change="No prazo" icon={Target} />
+                </>
+             )}
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+               Simulação Financeira
+            </h2>
+            <ProjectionTool />
+          </div>
+
+          <div className="grid auto-rows-min gap-6 md:grid-cols-2">
+             <AllocationChart />
+             <RecentTransactions />
+          </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   )
 }

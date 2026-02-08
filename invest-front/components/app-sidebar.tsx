@@ -29,8 +29,8 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
-    { name: "Alpha Capital", logo: Building2, plan: "Enterprise" },
-    { name: "BlueStone Invest", logo: Wallet, plan: "Pro" },
+    { name: "OnClickInvest", logo: ShieldCheck, plan: "SaaS Admin" },
+    { name: "Alpha Capital", logo: Building2, plan: "Tenant Demo" },
   ],
   navMain: [
     {
@@ -78,30 +78,28 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  // Conectando ao mesmo cérebro da Página
   const { role } = useAuth(); 
 
-  // Filtra o menu em tempo real
   const filteredNavMain = data.navMain.filter(item => 
     !item.visibleTo || item.visibleTo.includes(role)
   );
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-slate-800 bg-slate-950" {...props}>
-      <SidebarHeader className="bg-slate-950 border-b border-slate-800">
+    <Sidebar collapsible="icon" className="border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950" {...props}>
+      <SidebarHeader className="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       
-      <SidebarContent className="bg-slate-950">
+      <SidebarContent className="bg-white dark:bg-slate-950">
         <NavMain items={filteredNavMain} />
       </SidebarContent>
 
-      <SidebarFooter className="bg-slate-950 border-t border-slate-800">
+      <SidebarFooter className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4">
+        {/* Apenas o nome do usuário/perfil, sem botão de tema */}
         <NavUser user={data.user} />
-        {/* Indicador visual de qual perfil está ativo na sidebar */}
-        <div className="px-4 py-2 text-[10px] text-slate-600 font-mono text-center group-data-[collapsible=icon]:hidden">
-          Perfil: {role}
-        </div>
+        <div className="mt-2 text-[10px] text-slate-500 font-mono text-center group-data-[collapsible=icon]:hidden uppercase tracking-widest">
+             {role.replace('_', ' ')}
+         </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -1,11 +1,12 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { useTheme } from "next-themes";
 
 const generateProjectionData = (initial: number, monthly: number, rate: number, years: number) => {
   const data = [];
@@ -30,40 +31,62 @@ const generateProjectionData = (initial: number, monthly: number, rate: number, 
 };
 
 export function ProjectionTool() {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [initial, setInitial] = useState(100000); 
   const [monthly, setMonthly] = useState(2500);   
   const [rate, setRate] = useState(12);           
   const [years, setYears] = useState(10);         
   
+  // Evita erro de hidratação nos gráficos
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const data = generateProjectionData(initial, monthly, rate, years);
   const finalAmount = data[data.length - 1].saldo;
 
+  if (!mounted) return null;
+
+  const isDark = resolvedTheme === 'dark';
+
+  // Cores Dinâmicas do Gráfico
+  const colors = {
+    grid: isDark ? "#334155" : "#e2e8f0",
+    axis: isDark ? "#94a3b8" : "#64748b",
+    tooltipBg: isDark ? "#0f172a" : "#ffffff",
+    tooltipBorder: isDark ? "#1e293b" : "#e2e8f0",
+    tooltipText: isDark ? "#f8fafc" : "#0f172a",
+    areaStroke: isDark ? "#3b82f6" : "#2563eb",
+    lineInvested: isDark ? "#64748b" : "#94a3b8"
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card className="lg:col-span-1 bg-slate-950 border-slate-800 text-slate-200 shadow-xl">
+      <Card className="lg:col-span-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white">Simulador Pro</CardTitle>
-          <CardDescription className="text-slate-400">Ajuste os valores abaixo:</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-white">Simulador Pro</CardTitle>
+          <CardDescription className="text-slate-500 dark:text-slate-400">Ajuste os valores abaixo:</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label className="text-slate-300">Capital Inicial (R$)</Label>
+            <Label className="text-slate-600 dark:text-slate-300">Capital Inicial (R$)</Label>
             <Input 
               type="number" 
               value={initial} 
               onChange={(e) => setInitial(Number(e.target.value))}
-              className="bg-slate-900 border-slate-700 text-white focus:border-blue-500"
+              className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:border-blue-500"
             />
           </div>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-slate-300">Aporte Mensal (R$)</Label>
+              <Label className="text-slate-600 dark:text-slate-300">Aporte Mensal (R$)</Label>
               <Input 
                 type="number" 
                 value={monthly} 
                 onChange={(e) => setMonthly(Number(e.target.value))}
-                className="bg-slate-900 border-slate-700 text-white focus:border-blue-500"
+                className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:border-blue-500"
               />
             </div>
             <Slider 
@@ -76,18 +99,18 @@ export function ProjectionTool() {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-slate-300">Rentabilidade Anual (%)</Label>
+            <Label className="text-slate-600 dark:text-slate-300">Rentabilidade Anual (%)</Label>
             <Input 
               type="number" 
               value={rate} 
               onChange={(e) => setRate(Number(e.target.value))}
-              className="bg-slate-900 border-slate-700 text-white focus:border-blue-500"
+              className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:border-blue-500"
             />
           </div>
 
-          <div className="pt-6 border-t border-slate-800 mt-4">
+          <div className="pt-6 border-t border-slate-200 dark:border-slate-800 mt-4">
              <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Patrimônio Projetado</p>
-             <p className="text-3xl font-bold text-emerald-400 mt-1">
+             <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(finalAmount)}
              </p>
              <p className="text-xs text-slate-500 mt-2">Em {years} anos</p>
@@ -95,9 +118,9 @@ export function ProjectionTool() {
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-2 bg-slate-950 border-slate-800 shadow-xl">
+      <Card className="lg:col-span-2 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white">Curva de Evolução</CardTitle>
+          <CardTitle className="text-slate-900 dark:text-white">Curva de Evolução</CardTitle>
         </CardHeader>
         <CardContent className="h-[400px] w-full min-w-0">
           <div style={{ width: '100%', height: '100%' }}>
@@ -105,26 +128,26 @@ export function ProjectionTool() {
               <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor={colors.areaStroke} stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor={colors.areaStroke} stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                <XAxis dataKey="year" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
+                <XAxis dataKey="year" stroke={colors.axis} fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis 
-                  stroke="#64748b" 
+                  stroke={colors.axis} 
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false}
                   tickFormatter={(val) => `R$${val/1000}k`} 
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', color: '#fff' }}
+                  contentStyle={{ backgroundColor: colors.tooltipBg, borderColor: colors.tooltipBorder, borderRadius: '8px', color: colors.tooltipText }}
                   formatter={(value: any) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
-                  labelStyle={{ color: '#94a3b8' }}
+                  labelStyle={{ color: colors.axis }}
                 />
-                <Area type="monotone" dataKey="saldo" name="Saldo Total" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorSaldo)" />
-                <Line type="monotone" dataKey="investido" name="Total Investido" stroke="#64748b" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                <Area type="monotone" dataKey="saldo" name="Saldo Total" stroke={colors.areaStroke} strokeWidth={3} fillOpacity={1} fill="url(#colorSaldo)" />
+                <Line type="monotone" dataKey="investido" name="Total Investido" stroke={colors.lineInvested} strokeWidth={2} dot={false} strokeDasharray="5 5" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -23,15 +23,18 @@ import {
 import { useAuth } from "@/contexts/auth-context"
 
 const data = {
+  // Dados do Rodapé
   user: {
     name: "Dr. Roberto",
     email: "roberto@invest.com",
     avatar: "/avatars/shadcn.jpg",
   },
+  // Times no topo
   teams: [
     { name: "OnClickInvest", logo: ShieldCheck, plan: "SaaS Admin" },
     { name: "Alpha Capital", logo: Building2, plan: "Tenant Demo" },
   ],
+  // Estrutura de Menus com Permissões
   navMain: [
     {
       title: "Governança",
@@ -40,8 +43,9 @@ const data = {
       isActive: true,
       visibleTo: ['SUPER_ADMIN'], 
       items: [
-        { title: "Dashboard Global", url: "/dashboard/global" },
+        { title: "Dashboard Global", url: "/dashboard" },
         { title: "Tenants & Gestoras", url: "/dashboard/tenants" },
+        { title: "Admins do Sistema", url: "/dashboard/admins" },
       ],
     },
     {
@@ -53,6 +57,7 @@ const data = {
       items: [
         { title: "Visão Geral", url: "/dashboard/overview" },
         { title: "Carteira de Clientes", url: "/dashboard/clients" },
+        { title: "Investimentos & Ativos", url: "/dashboard/portfolios" },
       ],
     },
     {
@@ -71,7 +76,7 @@ const data = {
       icon: Settings2,
       visibleTo: ['SUPER_ADMIN', 'ADMIN', 'INVESTOR'],
       items: [
-        { title: "Perfil", url: "/settings/profile" },
+        { title: "Perfil", url: "/dashboard/settings/profile" },
       ],
     },
   ],
@@ -80,6 +85,7 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { role } = useAuth(); 
 
+  // Filtra o menu baseado no cargo (role)
   const filteredNavMain = data.navMain.filter(item => 
     !item.visibleTo || item.visibleTo.includes(role)
   );
@@ -95,8 +101,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4">
-        {/* Apenas o nome do usuário/perfil, sem botão de tema */}
         <NavUser user={data.user} />
+        {/* Mostra o cargo no rodapé apenas texto */}
         <div className="mt-2 text-[10px] text-slate-500 font-mono text-center group-data-[collapsible=icon]:hidden uppercase tracking-widest">
              {role.replace('_', ' ')}
          </div>

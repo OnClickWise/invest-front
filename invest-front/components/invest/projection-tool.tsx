@@ -33,12 +33,11 @@ const generateProjectionData = (initial: number, monthly: number, rate: number, 
 export function ProjectionTool() {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [initial, setInitial] = useState(100000); 
-  const [monthly, setMonthly] = useState(2500);   
-  const [rate, setRate] = useState(12);           
+  const [initial, setInitial] = useState(20000); 
+  const [monthly, setMonthly] = useState(500);   
+  const [rate, setRate] = useState(8);           
   const [years, setYears] = useState(10);         
   
-  // Evita erro de hidratação nos gráficos
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -50,7 +49,6 @@ export function ProjectionTool() {
 
   const isDark = resolvedTheme === 'dark';
 
-  // Cores Dinâmicas do Gráfico
   const colors = {
     grid: isDark ? "#334155" : "#e2e8f0",
     axis: isDark ? "#94a3b8" : "#64748b",
@@ -61,6 +59,9 @@ export function ProjectionTool() {
     lineInvested: isDark ? "#64748b" : "#94a3b8"
   };
 
+  const formatCurrency = (value: number) => 
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="lg:col-span-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 shadow-sm">
@@ -70,7 +71,7 @@ export function ProjectionTool() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label className="text-slate-600 dark:text-slate-300">Capital Inicial (R$)</Label>
+            <Label className="text-slate-600 dark:text-slate-300">Capital Inicial ($)</Label>
             <Input 
               type="number" 
               value={initial} 
@@ -81,7 +82,7 @@ export function ProjectionTool() {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-slate-600 dark:text-slate-300">Aporte Mensal (R$)</Label>
+              <Label className="text-slate-600 dark:text-slate-300">Aporte Mensal ($)</Label>
               <Input 
                 type="number" 
                 value={monthly} 
@@ -91,8 +92,8 @@ export function ProjectionTool() {
             </div>
             <Slider 
               value={[monthly]} 
-              max={50000} 
-              step={100} 
+              max={10000} 
+              step={50} 
               onValueChange={(val) => setMonthly(val[0])}
               className="py-2"
             />
@@ -111,7 +112,7 @@ export function ProjectionTool() {
           <div className="pt-6 border-t border-slate-200 dark:border-slate-800 mt-4">
              <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Patrimônio Projetado</p>
              <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(finalAmount)}
+               {formatCurrency(finalAmount)}
              </p>
              <p className="text-xs text-slate-500 mt-2">Em {years} anos</p>
           </div>
@@ -125,7 +126,7 @@ export function ProjectionTool() {
         <CardContent className="h-[400px] w-full min-w-0">
           <div style={{ width: '100%', height: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={colors.areaStroke} stopOpacity={0.3}/>
@@ -139,11 +140,11 @@ export function ProjectionTool() {
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false}
-                  tickFormatter={(val) => `R$${val/1000}k`} 
+                  tickFormatter={(val) => `$${val/1000}k`} 
                 />
                 <Tooltip 
                   contentStyle={{ backgroundColor: colors.tooltipBg, borderColor: colors.tooltipBorder, borderRadius: '8px', color: colors.tooltipText }}
-                  formatter={(value: any) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
+                  formatter={(value: any) => formatCurrency(value)}
                   labelStyle={{ color: colors.axis }}
                 />
                 <Area type="monotone" dataKey="saldo" name="Saldo Total" stroke={colors.areaStroke} strokeWidth={3} fillOpacity={1} fill="url(#colorSaldo)" />

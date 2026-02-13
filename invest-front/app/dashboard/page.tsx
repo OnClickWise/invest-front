@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { ProjectionTool } from "@/components/invest/projection-tool"
 import { AllocationChart } from "@/components/invest/allocation-chart"
 import { RecentTransactions } from "@/components/invest/recent-transactions"
+import { MarketOverview } from "@/components/invest/market-overview"
 import { ModeToggle } from "@/components/mode-toggle"
 
 import {
@@ -19,7 +20,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2, Wallet, Users, TrendingUp, ShieldCheck, Target } from "lucide-react"
 
-// Card adaptativo
 function MetricCard({ title, value, icon: Icon, change }: any) {
   return (
     <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-sm">
@@ -30,7 +30,7 @@ function MetricCard({ title, value, icon: Icon, change }: any) {
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         <p className="text-xs text-emerald-600 dark:text-emerald-500 flex items-center mt-1">
-          {change} <span className="text-slate-500 ml-1">vs. mês anterior</span>
+          {change} <span className="text-slate-500 ml-1">vs. last month</span>
         </p>
       </CardContent>
     </Card>
@@ -38,7 +38,7 @@ function MetricCard({ title, value, icon: Icon, change }: any) {
 }
 
 export default function DashboardPage() {
-  const { role } = useAuth();
+  const { role, setRole } = useAuth();
 
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
@@ -60,12 +60,20 @@ export default function DashboardPage() {
           </div>
           
           <div className="ml-auto flex items-center gap-3">
-             <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500 font-medium hidden md:inline-block mr-2">
-                  {role === 'SUPER_ADMIN' ? 'Super Admin' : role === 'ADMIN' ? 'Gestor' : 'Investidor'}
-                </span>
-                <ModeToggle />
+             <div className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1">
+               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Simular:</span>
+               <select 
+                 className="bg-transparent text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
+                 value={role}
+                 onChange={(e: any) => setRole(e.target.value)}
+               >
+                  <option value="SUPER_ADMIN">Super Admin</option>
+                  <option value="ADMIN">Gestor</option>
+                  <option value="INVESTOR">Investidor</option>
+               </select>
              </div>
+             
+             <ModeToggle />
           </div>
         </header>
 
@@ -73,37 +81,44 @@ export default function DashboardPage() {
           <div className="grid gap-4 md:grid-cols-3">
              {role === 'SUPER_ADMIN' && (
                 <>
-                  <MetricCard title="Tenants Ativos" value="124" change="+12%" icon={Building2} />
-                  <MetricCard title="AUM Global" value="R$ 4.2B" change="+8.4%" icon={Wallet} />
-                  <MetricCard title="Receita SaaS (MRR)" value="R$ 840k" change="+15%" icon={TrendingUp} />
+                  <MetricCard title="Active Tenants" value="124" change="+12%" icon={Building2} />
+                  <MetricCard title="Global AUM" value="$840M" change="+8.4%" icon={Wallet} />
+                  <MetricCard title="SaaS MRR" value="$150k" change="+15%" icon={TrendingUp} />
                 </>
              )}
              {role === 'ADMIN' && (
                 <>
-                  <MetricCard title="Carteiras" value="84" change="+4" icon={Users} />
-                  <MetricCard title="Patrimônio" value="R$ 145M" change="+1.2%" icon={Wallet} />
-                  <MetricCard title="Rentabilidade" value="1.45%" change="+0.2%" icon={TrendingUp} />
+                  <MetricCard title="Portfolios" value="84" change="+4" icon={Users} />
+                  <MetricCard title="Total Assets" value="$2.4M" change="+1.2%" icon={Wallet} />
+                  <MetricCard title="Avg. Return" value="8.4%" change="+0.2%" icon={TrendingUp} />
                 </>
              )}
              {role === 'INVESTOR' && (
                 <>
-                  <MetricCard title="Meu Saldo" value="R$ 152.400" change="+2.5%" icon={Wallet} />
-                  <MetricCard title="Rentabilidade" value="18.4%" change="+1.2%" icon={TrendingUp} />
-                  <MetricCard title="Projeção 2028" value="R$ 480k" change="No prazo" icon={Target} />
+                  <MetricCard title="My Balance" value="$32,400" change="+2.5%" icon={Wallet} />
+                  <MetricCard title="Total Profit" value="12.4%" change="+1.2%" icon={TrendingUp} />
+                  <MetricCard title="Goal Projection" value="$100k" change="On Track" icon={Target} />
                 </>
              )}
           </div>
 
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-               Simulação Financeira
+               Financial Simulation
             </h2>
             <ProjectionTool />
           </div>
 
-          <div className="grid auto-rows-min gap-6 md:grid-cols-2">
-             <AllocationChart />
-             <RecentTransactions />
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+             <div className="md:col-span-1">
+               <AllocationChart />
+             </div>
+             <div className="md:col-span-1">
+               <RecentTransactions />
+             </div>
+             <div className="md:col-span-2 xl:col-span-1">
+               <MarketOverview />
+             </div>
           </div>
         </div>
     </div>

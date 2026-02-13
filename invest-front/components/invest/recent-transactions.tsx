@@ -5,7 +5,7 @@ const transactions = [
   { 
     id: "1", 
     type: "deposit", 
-    amount: "+ R$ 2.500,00", 
+    amount: "+ $500.00", 
     date: "Hoje, 10:23", 
     label: "Aporte Mensal", 
     icon: ArrowUpRight, 
@@ -15,9 +15,9 @@ const transactions = [
   { 
     id: "2", 
     type: "dividend", 
-    amount: "+ R$ 145,20", 
+    amount: "+ $25.40", 
     date: "Ontem, 09:15", 
-    label: "Dividendos HGLG11", 
+    label: "Dividendos AAPL", 
     icon: RefreshCw, 
     color: "text-blue-700 dark:text-blue-400", 
     bg: "bg-blue-100 dark:bg-blue-500/10" 
@@ -25,9 +25,9 @@ const transactions = [
   { 
     id: "3", 
     type: "withdrawal", 
-    amount: "- R$ 150,00", 
+    amount: "- $30.00", 
     date: "05 Set, 14:00", 
-    label: "Pagamento Taxa B3", 
+    label: "Taxa de Custódia", 
     icon: ArrowDownRight, 
     color: "text-rose-700 dark:text-rose-400", 
     bg: "bg-rose-100 dark:bg-rose-500/10" 
@@ -35,7 +35,7 @@ const transactions = [
   { 
     id: "4", 
     type: "deposit", 
-    amount: "+ R$ 5.000,00", 
+    amount: "+ $1,000.00", 
     date: "01 Set, 08:30", 
     label: "Aporte Extra", 
     icon: ArrowUpRight, 

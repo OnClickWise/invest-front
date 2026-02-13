@@ -20,7 +20,7 @@ export default function MyWealthPage() {
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block"><BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink></BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem><BreadcrumbPage>Meu Patrimônio</BreadcrumbPage></BreadcrumbItem>
+              <BreadcrumbItem><BreadcrumbPage>My Wealth</BreadcrumbPage></BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
@@ -28,33 +28,32 @@ export default function MyWealthPage() {
       </header>
 
       <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Minha Carteira</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Portfolio</h1>
 
-        {/* Resumo do Investidor */}
         <div className="grid gap-4 md:grid-cols-3">
            <Card className="bg-emerald-600 border-none shadow-md text-white">
              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-               <CardTitle className="text-sm font-medium text-emerald-100">Saldo Total</CardTitle>
+               <CardTitle className="text-sm font-medium text-emerald-100">Total Balance</CardTitle>
                <Wallet className="h-4 w-4 text-emerald-100" />
              </CardHeader>
-             <CardContent><div className="text-3xl font-bold">R$ 152.400,00</div></CardContent>
+             <CardContent><div className="text-3xl font-bold">$32,400.00</div></CardContent>
            </Card>
            <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-               <CardTitle className="text-sm font-medium text-slate-500">Lucro Acumulado</CardTitle>
+               <CardTitle className="text-sm font-medium text-slate-500">Total Profit</CardTitle>
                <TrendingUp className="h-4 w-4 text-emerald-500" />
              </CardHeader>
              <CardContent>
-               <div className="text-2xl font-bold text-slate-900 dark:text-white">+ R$ 24.500</div>
-               <p className="text-xs text-emerald-500">+18.4% total</p>
+               <div className="text-2xl font-bold text-slate-900 dark:text-white">+ $4,500</div>
+               <p className="text-xs text-emerald-500">+13.8% all time</p>
              </CardContent>
            </Card>
            <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-               <CardTitle className="text-sm font-medium text-slate-500">Disponível em Caixa</CardTitle>
+               <CardTitle className="text-sm font-medium text-slate-500">Cash Available</CardTitle>
                <PiggyBank className="h-4 w-4 text-blue-500" />
              </CardHeader>
-             <CardContent><div className="text-2xl font-bold text-slate-900 dark:text-white">R$ 2.400,00</div></CardContent>
+             <CardContent><div className="text-2xl font-bold text-slate-900 dark:text-white">$800.00</div></CardContent>
            </Card>
         </div>
 

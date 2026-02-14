@@ -12,13 +12,18 @@ export interface Portfolio {
 export const portfolioService = {
   // Lista carteiras
   getAll: async () => {
-    const response = await api.get<Portfolio[]>('/portfolios');
+    const response = await api.get<Portfolio[]>('/api/portfolios');
+    return response.data;
+  },
+
+  getByInvestor: async (investorId: string) => {
+    const response = await api.get<Portfolio[]>(`/api/portfolios/investor/${investorId}`);
     return response.data;
   },
 
   // Cria nova carteira
-  create: async (data: { name: string; investorId: string }) => {
-    const response = await api.post('/portfolios', data);
+  create: async (data: { name: string; investorId: string; initialAmount: number; description?: string }) => {
+    const response = await api.post('/api/portfolios', data);
     return response.data;
   }
 };

@@ -1,11 +1,16 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { ProjectionTool } from "@/components/invest/projection-tool"
 import { AllocationChart } from "@/components/invest/allocation-chart"
 import { RecentTransactions } from "@/components/invest/recent-transactions"
 import { MarketOverview } from "@/components/invest/market-overview"
 import { ModeToggle } from "@/components/mode-toggle"
+import { tenantService } from "@/services/tenant.service"
+import { userService } from "@/services/user.service"
+import { investorService } from "@/services/investor.service"
+import { portfolioService } from "@/services/portfolio.service"
 
 import {
   Breadcrumb,
@@ -18,7 +23,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Wallet, Users, TrendingUp, ShieldCheck, Target } from "lucide-react"
+import { Building2, Wallet, Users, TrendingUp, ShieldCheck, Target, Loader2 } from "lucide-react"
 
 function MetricCard({ title, value, icon: Icon, change }: any) {
   return (
@@ -38,7 +43,85 @@ function MetricCard({ title, value, icon: Icon, change }: any) {
 }
 
 export default function DashboardPage() {
-  const { role, setRole } = useAuth();
+  const { role, setRole, user } = useAuth();
+  const [loadingMetrics, setLoadingMetrics] = useState(true)
+  const [metrics, setMetrics] = useState({
+    activeTenants: 0,
+    totalTenants: 0,
+    totalAdmins: 0,
+    totalAssets: 0,
+    portfolioCount: 0,
+    investorCount: 0,
+    investorBalance: 0,
+    investorProfit: 0,
+    goalProjection: 0,
+  })
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        setLoadingMetrics(true)
+
+        if (role === "SUPER_ADMIN") {
+          const [tenants, admins] = await Promise.all([
+            tenantService.getAll().catch(() => []),
+            userService.getAdmins().catch(() => []),
+          ])
+
+          setMetrics((prev) => ({
+            ...prev,
+            activeTenants: tenants.filter((tenant) => tenant.isActive).length,
+            totalTenants: tenants.length,
+            totalAdmins: admins.length,
+          }))
+          return
+        }
+
+        if (role === "ADMIN") {
+          const [portfolios, investors] = await Promise.all([
+            portfolioService.getAll().catch(() => []),
+            investorService.getAll().catch(() => []),
+          ])
+
+          const totalAssets = portfolios.reduce((sum, item) => sum + (item.totalValue || item.initialAmount || 0), 0)
+
+          setMetrics((prev) => ({
+            ...prev,
+            totalAssets,
+            portfolioCount: portfolios.length,
+            investorCount: investors.length,
+          }))
+          return
+        }
+
+        if (role === "INVESTOR") {
+          const investors = await investorService.getAll().catch(() => [])
+          const investor = investors.find((item) => item.email === user?.email)
+          if (!investor) return
+
+          const portfolios = await portfolioService.getByInvestor(investor.id).catch(() => [])
+          const totalAssets = portfolios.reduce((sum, item) => sum + (item.totalValue || item.initialAmount || 0), 0)
+
+          setMetrics((prev) => ({
+            ...prev,
+            investorBalance: totalAssets,
+            investorProfit: totalAssets * 0.124,
+            goalProjection: totalAssets * 1.2,
+          }))
+        }
+      } catch (error) {
+        console.error("Erro ao carregar metricas:", error)
+      } finally {
+        setLoadingMetrics(false)
+      }
+    }
+
+    fetchMetrics()
+  }, [role, user?.email])
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value)
+  }
 
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
@@ -79,26 +162,34 @@ export default function DashboardPage() {
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
-             {role === 'SUPER_ADMIN' && (
-                <>
-                  <MetricCard title="Active Tenants" value="124" change="+12%" icon={Building2} />
-                  <MetricCard title="Global AUM" value="$840M" change="+8.4%" icon={Wallet} />
-                  <MetricCard title="SaaS MRR" value="$150k" change="+15%" icon={TrendingUp} />
-                </>
-             )}
-             {role === 'ADMIN' && (
-                <>
-                  <MetricCard title="Portfolios" value="84" change="+4" icon={Users} />
-                  <MetricCard title="Total Assets" value="$2.4M" change="+1.2%" icon={Wallet} />
-                  <MetricCard title="Avg. Return" value="8.4%" change="+0.2%" icon={TrendingUp} />
-                </>
-             )}
-             {role === 'INVESTOR' && (
-                <>
-                  <MetricCard title="My Balance" value="$32,400" change="+2.5%" icon={Wallet} />
-                  <MetricCard title="Total Profit" value="12.4%" change="+1.2%" icon={TrendingUp} />
-                  <MetricCard title="Goal Projection" value="$100k" change="On Track" icon={Target} />
-                </>
+             {loadingMetrics ? (
+               <div className="col-span-full flex items-center gap-2 text-slate-500">
+                 <Loader2 className="h-4 w-4 animate-spin" /> Carregando metricas...
+               </div>
+             ) : (
+               <>
+                 {role === "SUPER_ADMIN" && (
+                    <>
+                      <MetricCard title="Active Tenants" value={metrics.activeTenants} change="Atualizado" icon={Building2} />
+                      <MetricCard title="System Admins" value={metrics.totalAdmins} change="Atualizado" icon={ShieldCheck} />
+                      <MetricCard title="Total Tenants" value={metrics.totalTenants} change="Atualizado" icon={Users} />
+                    </>
+                 )}
+                 {role === "ADMIN" && (
+                    <>
+                      <MetricCard title="Portfolios" value={metrics.portfolioCount} change="Atualizado" icon={Users} />
+                      <MetricCard title="Total Assets" value={formatCurrency(metrics.totalAssets)} change="Atualizado" icon={Wallet} />
+                      <MetricCard title="Investors" value={metrics.investorCount} change="Atualizado" icon={TrendingUp} />
+                    </>
+                 )}
+                 {role === "INVESTOR" && (
+                    <>
+                      <MetricCard title="My Balance" value={formatCurrency(metrics.investorBalance)} change="Atualizado" icon={Wallet} />
+                      <MetricCard title="Total Profit" value={formatCurrency(metrics.investorProfit)} change="Atualizado" icon={TrendingUp} />
+                      <MetricCard title="Goal Projection" value={formatCurrency(metrics.goalProjection)} change="On Track" icon={Target} />
+                    </>
+                 )}
+               </>
              )}
           </div>
 
@@ -106,7 +197,7 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                Financial Simulation
             </h2>
-            <ProjectionTool />
+            <ProjectionTool showInvestorSelect={role !== "INVESTOR"} />
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

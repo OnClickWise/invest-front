@@ -1,6 +1,8 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
+import { authService, UserMe } from "@/services/auth.service"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +14,29 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { ModeToggle } from "@/components/mode-toggle"
 
 export default function ProfilePage() {
-  const { role } = useAuth()
+  const { role, user } = useAuth()
+  const [profile, setProfile] = useState<UserMe | null>(null)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await authService.getMe()
+        setProfile(data)
+      } catch (error) {
+        console.error("Erro ao carregar perfil:", error)
+      }
+    }
+
+    fetchProfile()
+  }, [])
+
+  const displayEmail = profile?.email || user?.email || ""
+  const displayRole = profile?.role ?? user?.role ?? role
+  const displayName = useMemo(() => {
+    if (!displayEmail) return ""
+    const base = displayEmail.split("@")[0]
+    return base.charAt(0).toUpperCase() + base.slice(1)
+  }, [displayEmail])
 
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 transition-colors">
@@ -60,17 +84,17 @@ export default function ProfilePage() {
               
               <div className="space-y-2">
                 <Label className="text-slate-700 dark:text-slate-300">Nome Completo</Label>
-                <Input defaultValue="Dr. Roberto" className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white" />
+                <Input value={displayName} disabled className="bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-500" />
               </div>
               
               <div className="space-y-2">
                 <Label className="text-slate-700 dark:text-slate-300">Email</Label>
-                <Input defaultValue="roberto@invest.com" disabled className="bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-500" />
+                <Input value={displayEmail} disabled className="bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-500" />
               </div>
 
               <div className="space-y-2">
                 <Label className="text-slate-700 dark:text-slate-300">Função (Role)</Label>
-                <Input defaultValue={role} disabled className="bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-500 font-mono uppercase" />
+                <Input value={String(displayRole)} disabled className="bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-500 font-mono uppercase" />
               </div>
             </CardContent>
           </Card>

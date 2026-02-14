@@ -32,6 +32,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
+  const normalizeRole = (value: UserRole | number | string): UserRole => {
+    if (typeof value === 'number') {
+      const map: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'INVESTOR']
+      return map[value] || 'INVESTOR'
+    }
+
+    if (value === 'SUPER_ADMIN' || value === 'ADMIN' || value === 'INVESTOR') {
+      return value
+    }
+
+    return 'INVESTOR'
+  }
+
   // Ao carregar, verifica se já tem sessão salva
   useEffect(() => {
     const savedToken = localStorage.getItem('token')
@@ -40,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (savedToken && savedUser) {
       const parsedUser = JSON.parse(savedUser)
       setUser(parsedUser)
-      setRole(parsedUser.role)
+      setRole(normalizeRole(parsedUser.role))
     }
     setIsLoading(false)
   }, [])
@@ -50,16 +63,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Chama o endpoint do .NET
       const response = await api.post('/auth/login', { email, password })
-      
-      const { token, user: apiUser } = response.data
+
+      const token = response.data?.accessToken || response.data?.AccessToken
+      const apiUser = response.data?.user || response.data?.User
+
+      if (!token || !apiUser) {
+        throw new Error("Login response missing token or user")
+      }
 
       // Salva no navegador
       localStorage.setItem('token', token)
-      localStorage.setItem('user', JSON.stringify(apiUser))
+      const normalizedUser = { ...apiUser, role: normalizeRole(apiUser.role) }
+      localStorage.setItem('user', JSON.stringify(normalizedUser))
 
       // Atualiza estado
-      setUser(apiUser)
-      setRole(apiUser.role)
+      setUser(normalizedUser)
+      setRole(normalizedUser.role)
 
       // Redireciona
       router.push('/dashboard')

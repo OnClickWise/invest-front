@@ -31,7 +31,7 @@ export default function SimulationPage() {
         </div>
         
         {/* Reusamos o componente inteligente que já criamos */}
-        <ProjectionTool />
+        <ProjectionTool showInvestorSelect />
       </div>
     </div>
   )

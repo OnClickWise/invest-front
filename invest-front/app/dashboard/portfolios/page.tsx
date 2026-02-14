@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { portfolioService } from "@/services/portfolio.service"
+import { investorService, Investor } from "@/services/investor.service"
+import { portfolioService, Portfolio } from "@/services/portfolio.service"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
@@ -10,12 +11,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal, Plus, Wallet, TrendingUp, DollarSign, Loader2 } from "lucide-react"
 import { ModeToggle } from "@/components/mode-toggle"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 
 export default function PortfoliosPage() {
   const { role } = useAuth()
   // Estado para armazenar as carteiras vindas da API
-  const [portfolios, setPortfolios] = useState<any[]>([]) 
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([])
+  const [investors, setInvestors] = useState<Investor[]>([])
   const [loading, setLoading] = useState(true)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [newPortfolioName, setNewPortfolioName] = useState("")
+  const [newPortfolioInvestorId, setNewPortfolioInvestorId] = useState("")
+  const [newPortfolioInitialAmount, setNewPortfolioInitialAmount] = useState(0)
+  const [newPortfolioDescription, setNewPortfolioDescription] = useState("")
 
   // Busca os dados assim que a página carrega (se for Admin)
   useEffect(() => {
@@ -29,15 +40,51 @@ export default function PortfoliosPage() {
   const fetchPortfolios = async () => {
     try {
       setLoading(true)
-      // Chama o serviço que bate no .NET
-      const data = await portfolioService.getAll().catch(() => []) 
-      setPortfolios(data)
+      const [portfolioData, investorData] = await Promise.all([
+        portfolioService.getAll().catch(() => []),
+        investorService.getAll().catch(() => []),
+      ])
+      setPortfolios(portfolioData)
+      setInvestors(investorData)
+      if (!newPortfolioInvestorId && investorData.length > 0) {
+        setNewPortfolioInvestorId(investorData[0].id)
+      }
     } catch (error) {
       console.error("Erro ao buscar carteiras", error)
     } finally {
       setLoading(false)
     }
   }
+
+  const handleCreatePortfolio = async () => {
+    try {
+      setIsCreating(true)
+      await portfolioService.create({
+        name: newPortfolioName,
+        investorId: newPortfolioInvestorId,
+        initialAmount: newPortfolioInitialAmount,
+        description: newPortfolioDescription || undefined,
+      })
+      await fetchPortfolios()
+      setIsDialogOpen(false)
+      setNewPortfolioName("")
+      setNewPortfolioDescription("")
+      setNewPortfolioInitialAmount(0)
+    } catch (error) {
+      console.error("Erro ao criar carteira", error)
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  const investorsMap = useMemo(() => {
+    return investors.reduce<Record<string, Investor>>((acc, investor) => {
+      acc[investor.id] = investor
+      return acc
+    }, {})
+  }, [investors])
+
+  const totalCustody = portfolios.reduce((sum, item) => sum + (item.totalValue || item.initialAmount || 0), 0)
 
   // Formatador de Moeda (USD)
   const formatCurrency = (value: number) => {
@@ -83,10 +130,51 @@ export default function PortfoliosPage() {
                     <p className="text-slate-500 dark:text-slate-400 text-sm">Control assets in your clients' portfolios.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" className="border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">New Portfolio</Button>
-                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                        <Plus className="mr-2 h-4 w-4" /> New Asset
-                    </Button>
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">New Portfolio</Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                        <DialogHeader>
+                          <DialogTitle className="text-slate-900 dark:text-white">Create Portfolio</DialogTitle>
+                          <DialogDescription className="text-slate-500 dark:text-slate-400">Link the portfolio to an investor.</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="portfolio-name" className="text-slate-700 dark:text-slate-300">Name</Label>
+                            <Input id="portfolio-name" value={newPortfolioName} onChange={(e) => setNewPortfolioName(e.target.value)} className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="portfolio-investor" className="text-slate-700 dark:text-slate-300">Investor</Label>
+                            <select
+                              id="portfolio-investor"
+                              value={newPortfolioInvestorId}
+                              onChange={(e) => setNewPortfolioInvestorId(e.target.value)}
+                              className="h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 text-sm text-slate-900 dark:text-white"
+                            >
+                              {investors.map((investor) => (
+                                <option key={investor.id} value={investor.id}>
+                                  {investor.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="portfolio-amount" className="text-slate-700 dark:text-slate-300">Initial Amount</Label>
+                            <Input id="portfolio-amount" type="number" value={newPortfolioInitialAmount} onChange={(e) => setNewPortfolioInitialAmount(Number(e.target.value))} className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="portfolio-description" className="text-slate-700 dark:text-slate-300">Description</Label>
+                            <Input id="portfolio-description" value={newPortfolioDescription} onChange={(e) => setNewPortfolioDescription(e.target.value)} className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white w-full" onClick={handleCreatePortfolio} disabled={isCreating || !newPortfolioName || !newPortfolioInvestorId}>
+                            {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Portfolio"}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                 </div>
             </div>
 
@@ -96,7 +184,7 @@ export default function PortfoliosPage() {
                     <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"><Wallet size={20}/></div>
                     <div>
                         <p className="text-xs text-slate-500">Total Custody</p>
-                        <p className="font-bold text-lg text-slate-900 dark:text-white">$3.5M</p>
+                        <p className="font-bold text-lg text-slate-900 dark:text-white">{formatCurrency(totalCustody)}</p>
                     </div>
                 </div>
                 <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-4 shadow-sm">
@@ -143,10 +231,10 @@ export default function PortfoliosPage() {
                                             {item.name || 'Unnamed Portfolio'}
                                         </TableCell>
                                         <TableCell className="text-slate-600 dark:text-slate-300">
-                                            {item.investorName || item.investorId || '-'}
+                                            {item.investorName || investorsMap[item.investorId]?.name || item.investorId || '-'}
                                         </TableCell>
                                         <TableCell className="font-bold text-slate-900 dark:text-white">
-                                            {formatCurrency(item.totalValue || 0)}
+                                              {formatCurrency(item.totalValue || item.initialAmount || 0)}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-900 dark:hover:text-white">

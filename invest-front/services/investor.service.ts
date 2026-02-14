@@ -13,13 +13,13 @@ export interface Investor {
 export const investorService = {
   // Chama o GET /api/investors do seu Backend .NET
   getAll: async () => {
-    const response = await api.get<Investor[]>('/investors');
+    const response = await api.get<Investor[]>('/api/investors');
     return response.data;
   },
 
   // Chama o POST /api/investors do seu Backend .NET
   create: async (data: { name: string; email: string }) => {
-    const response = await api.post('/investors', data);
+    const response = await api.post('/api/investors', data);
     return response.data;
   }
 };

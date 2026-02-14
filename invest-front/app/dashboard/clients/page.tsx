@@ -25,8 +25,24 @@ export default function ClientsPage() {
   // Estado para novo cliente
   const [newClientName, setNewClientName] = useState("")
   const [newClientEmail, setNewClientEmail] = useState("")
+  const [emailError, setEmailError] = useState("")
   const [isCreating, setIsCreating] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  // Validação de email
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  const handleEmailChange = (email: string) => {
+    setNewClientEmail(email)
+    if (email && !validateEmail(email)) {
+      setEmailError("Please enter a valid email address")
+    } else {
+      setEmailError("")
+    }
+  }
 
   // Busca dados reais ao carregar a página
   useEffect(() => {
@@ -47,6 +63,10 @@ export default function ClientsPage() {
   }
 
   const handleCreateClient = async () => {
+    if (!newClientName || !newClientEmail || emailError) {
+      return
+    }
+    
     try {
       setIsCreating(true)
       await investorService.create({ name: newClientName, email: newClientEmail })
@@ -54,6 +74,7 @@ export default function ClientsPage() {
       setIsDialogOpen(false) // Fecha o modal
       setNewClientName("")
       setNewClientEmail("")
+      setEmailError("")
     } catch (error) {
       console.error("Erro ao criar investidor:", error)
     } finally {
@@ -121,16 +142,34 @@ export default function ClientsPage() {
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
                     <Input 
-                      id="email" 
+                      id="email"
+                      type="email"
+                      placeholder="client@example.com"
                       value={newClientEmail} 
-                      onChange={(e) => setNewClientEmail(e.target.value)} 
-                      className="col-span-3" 
+                      onChange={(e) => handleEmailChange(e.target.value)} 
+                      className={`col-span-3 ${
+                        emailError ? "border-red-500 focus:border-red-500" : ""
+                      }`}
                     />
+                    {emailError && (
+                      <p className="text-xs text-red-500 mt-1">{emailError}</p>
+                    )}
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleCreateClient} disabled={isCreating} className="bg-emerald-600 text-white">
-                    {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Investor"}
+                  <Button 
+                    onClick={handleCreateClient} 
+                    disabled={isCreating || !newClientName || !newClientEmail || !!emailError} 
+                    className="bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    {isCreating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Investor"
+                    )}
                   </Button>
                 </DialogFooter>
               </DialogContent>

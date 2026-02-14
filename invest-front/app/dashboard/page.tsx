@@ -43,7 +43,7 @@ function MetricCard({ title, value, icon: Icon, change }: any) {
 }
 
 export default function DashboardPage() {
-  const { role, setRole, user } = useAuth();
+  const { role, user } = useAuth();
   const [loadingMetrics, setLoadingMetrics] = useState(true)
   const [metrics, setMetrics] = useState({
     activeTenants: 0,
@@ -143,19 +143,6 @@ export default function DashboardPage() {
           </div>
           
           <div className="ml-auto flex items-center gap-3">
-             <div className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1">
-               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Simular:</span>
-               <select 
-                 className="bg-transparent text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
-                 value={role}
-                 onChange={(e: any) => setRole(e.target.value)}
-               >
-                  <option value="SUPER_ADMIN">Super Admin</option>
-                  <option value="ADMIN">Gestor</option>
-                  <option value="INVESTOR">Investidor</option>
-               </select>
-             </div>
-             
              <ModeToggle />
           </div>
         </header>
@@ -197,7 +184,7 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                Financial Simulation
             </h2>
-            <ProjectionTool showInvestorSelect={role !== "INVESTOR"} />
+            <ProjectionTool />
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

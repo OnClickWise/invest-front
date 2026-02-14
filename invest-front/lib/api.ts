@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // URL base do seu Backend .NET conforme a documentação
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://localhost:5001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5211';
 
 export const api = axios.create({
   baseURL: API_URL,

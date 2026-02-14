@@ -161,7 +161,14 @@ export default function PortfoliosPage() {
                           </div>
                           <div className="grid gap-2">
                             <Label htmlFor="portfolio-amount" className="text-slate-700 dark:text-slate-300">Initial Amount</Label>
-                            <Input id="portfolio-amount" type="number" value={newPortfolioInitialAmount} onChange={(e) => setNewPortfolioInitialAmount(Number(e.target.value))} className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" />
+                            <Input 
+                              id="portfolio-amount" 
+                              type="number" 
+                              value={newPortfolioInitialAmount} 
+                              onChange={(e) => setNewPortfolioInitialAmount(Number(e.target.value))} 
+                              onFocus={(e) => e.target.select()}
+                              className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" 
+                            />
                           </div>
                           <div className="grid gap-2">
                             <Label htmlFor="portfolio-description" className="text-slate-700 dark:text-slate-300">Description</Label>

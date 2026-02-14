@@ -8,9 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/auth-context";
-import { investorService, Investor } from "@/services/investor.service";
-import { reportService, ProjectionResponse } from "@/services/report.service";
-import { Loader2 } from "lucide-react";
 
 const generateProjectionData = (initial: number, monthly: number, rate: number, years: number) => {
   const data = [];
@@ -34,111 +31,25 @@ const generateProjectionData = (initial: number, monthly: number, rate: number, 
   return data;
 };
 
-type ProjectionToolProps = {
-  showInvestorSelect?: boolean;
-};
-
-export function ProjectionTool({ showInvestorSelect = false }: ProjectionToolProps) {
+export function ProjectionTool() {
   const { resolvedTheme } = useTheme();
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [initial, setInitial] = useState(20000);
   const [monthly, setMonthly] = useState(500);
   const [rate, setRate] = useState(8);
   const [years, setYears] = useState(10);
 
-  const [investors, setInvestors] = useState<Investor[]>([]);
-  const [selectedInvestorId, setSelectedInvestorId] = useState("");
-  const [projection, setProjection] = useState<ProjectionResponse | null>(null);
-  const [projectionLoading, setProjectionLoading] = useState(false);
-
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-
-    let isActive = true;
-    const fetchInvestors = async () => {
-      try {
-        const data = await investorService.getAll().catch(() => []);
-        if (!isActive) return;
-        setInvestors(data);
-
-        setSelectedInvestorId((current) => {
-          if (current) return current;
-          if (role === "INVESTOR" && user?.email) {
-            const investor = data.find((item) => item.email === user.email);
-            return investor?.id || "";
-          }
-          return data[0]?.id || "";
-        });
-      } catch (error) {
-        console.error("Erro ao buscar investidores:", error);
-      }
-    };
-
-    fetchInvestors();
-
-    return () => {
-      isActive = false;
-    };
-  }, [mounted, role, user?.email]);
-
-  useEffect(() => {
-    if (!mounted || !selectedInvestorId) {
-      setProjection(null);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setProjectionLoading(true);
-      try {
-        const result = await reportService.generateProjection({
-          investorId: selectedInvestorId,
-          initialCapital: initial,
-          monthlyContribution: monthly,
-          years,
-          scenarios: [
-            {
-              name: "Base",
-              annualRate: rate,
-            },
-          ],
-        });
-        setProjection(result);
-      } catch (error) {
-        console.error("Erro ao gerar projecao:", error);
-        setProjection(null);
-      } finally {
-        setProjectionLoading(false);
-      }
-    }, 350);
-
-    return () => clearTimeout(timer);
-  }, [mounted, selectedInvestorId, initial, monthly, rate, years]);
-
-  const fallbackData = useMemo(
+  const chartData = useMemo(
     () => generateProjectionData(initial, monthly, rate, years),
     [initial, monthly, rate, years]
   );
 
-  const apiScenario = projection?.scenarios?.[0];
-  const labels = projection?.labels?.length
-    ? projection.labels
-    : fallbackData.map((item) => String(item.year));
-
-  const chartData = labels.map((label, idx) => {
-    const fallback = fallbackData[idx] || fallbackData[fallbackData.length - 1];
-    return {
-      label,
-      saldo: apiScenario?.data?.[idx] ?? fallback?.saldo ?? 0,
-      investido: fallback?.investido ?? 0,
-    };
-  });
-
-  const finalAmount = apiScenario?.kpis?.finalAmount ?? chartData[chartData.length - 1]?.saldo ?? 0;
+  const finalAmount = chartData[chartData.length - 1]?.saldo ?? 0;
 
   if (!mounted) return null;
 
@@ -165,23 +76,6 @@ export function ProjectionTool({ showInvestorSelect = false }: ProjectionToolPro
           <CardDescription className="text-slate-500 dark:text-slate-400">Ajuste os valores abaixo:</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {showInvestorSelect && role !== "INVESTOR" && (
-            <div className="space-y-2">
-              <Label className="text-slate-600 dark:text-slate-300">Investidor</Label>
-              <select
-                value={selectedInvestorId}
-                onChange={(event) => setSelectedInvestorId(event.target.value)}
-                className="h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 text-sm text-slate-900 dark:text-white"
-              >
-                {investors.map((investor) => (
-                  <option key={investor.id} value={investor.id}>
-                    {investor.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label className="text-slate-600 dark:text-slate-300">Capital Inicial ($)</Label>
             <Input
@@ -237,11 +131,6 @@ export function ProjectionTool({ showInvestorSelect = false }: ProjectionToolPro
               {formatCurrency(finalAmount)}
             </p>
             <p className="text-xs text-slate-500 mt-2">Em {years} anos</p>
-            {projectionLoading && (
-              <p className="text-xs text-slate-500 mt-2 flex items-center gap-2">
-                <Loader2 className="h-3 w-3 animate-spin" /> Atualizando...
-              </p>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -261,7 +150,7 @@ export function ProjectionTool({ showInvestorSelect = false }: ProjectionToolPro
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
-                <XAxis dataKey="label" stroke={colors.axis} fontSize={12} tickLine={false} axisLine={false} />
+                <XAxis dataKey="year" stroke={colors.axis} fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis
                   stroke={colors.axis}
                   fontSize={12}

@@ -50,6 +50,17 @@ export default function RegisterPage() {
 
   return (
     <Card className="w-full max-w-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-xl">
+      <CardHeader className="space-y-1">
+        <div className="flex justify-center mb-4">
+          <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-xl">On</span>
+          </div>
+        </div>
+        <CardTitle className="text-2xl font-bold text-center text-slate-900 dark:text-white">OnClickInvest</CardTitle>
+        <CardDescription className="text-center text-slate-500 dark:text-slate-400">
+          Crie sua conta de administrador
+        </CardDescription>
+      </CardHeader>
       <CardContent className="space-y-4">
         <form onSubmit={handleRegister} className="space-y-4">
           <div className="space-y-2">
@@ -69,12 +80,6 @@ export default function RegisterPage() {
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Criar Conta Gratis"}
           </Button>
         </form>
-      </CardContent>
-          <Input id="password" type="password" className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
-        </div>
-        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
-          Criar Conta Grátis
-        </Button>
       </CardContent>
       <CardFooter className="flex justify-center border-t border-slate-100 dark:border-slate-800 pt-4">
         <p className="text-sm text-slate-500 dark:text-slate-400">
